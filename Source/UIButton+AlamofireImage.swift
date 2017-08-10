@@ -130,7 +130,7 @@ extension UIButton {
         placeholderImage: UIImage? = nil,
         filter: ImageFilter? = nil,
         progress: ImageDownloader.ProgressHandler? = nil,
-        progressQueue: DispatchQueue = DispatchQueue.main,
+        handlerQueue: DispatchQueue = DispatchQueue.main,
         completion: ((DataResponse<UIImage>) -> Void)? = nil)
     {
         af_setImage(
@@ -139,7 +139,7 @@ extension UIButton {
             placeholderImage: placeholderImage,
             filter: filter,
             progress: progress,
-            progressQueue: progressQueue,
+            handlerQueue: handlerQueue,
             completion: completion
         )
     }
@@ -169,7 +169,7 @@ extension UIButton {
         placeholderImage: UIImage? = nil,
         filter: ImageFilter? = nil,
         progress: ImageDownloader.ProgressHandler? = nil,
-        progressQueue: DispatchQueue = DispatchQueue.main,
+        handlerQueue: DispatchQueue = DispatchQueue.main,
         completion: ((DataResponse<UIImage>) -> Void)? = nil)
     {
         guard !isImageURLRequest(urlRequest, equalToActiveRequestURLForState: state) else {
@@ -216,7 +216,7 @@ extension UIButton {
             receiptID: downloadID,
             filter: filter,
             progress: progress,
-            progressQueue: progressQueue,
+            handlerQueue: handlerQueue,
             completion: { [weak self] response in
                 guard
                     let strongSelf = self,
@@ -277,7 +277,7 @@ extension UIButton {
         placeholderImage: UIImage? = nil,
         filter: ImageFilter? = nil,
         progress: ImageDownloader.ProgressHandler? = nil,
-        progressQueue: DispatchQueue = DispatchQueue.main,
+        handlerQueue: DispatchQueue = DispatchQueue.main,
         completion: ((DataResponse<UIImage>) -> Void)? = nil)
     {
         af_setBackgroundImage(
@@ -286,7 +286,7 @@ extension UIButton {
             placeholderImage: placeholderImage,
             filter: filter,
             progress: progress,
-            progressQueue: progressQueue,
+            handlerQueue: handlerQueue,
             completion: completion
         )
     }
@@ -316,7 +316,7 @@ extension UIButton {
         placeholderImage: UIImage? = nil,
         filter: ImageFilter? = nil,
         progress: ImageDownloader.ProgressHandler? = nil,
-        progressQueue: DispatchQueue = DispatchQueue.main,
+        handlerQueue: DispatchQueue = DispatchQueue.main,
         completion: ((DataResponse<UIImage>) -> Void)? = nil)
     {
         guard !isImageURLRequest(urlRequest, equalToActiveRequestURLForState: state) else {
@@ -363,7 +363,7 @@ extension UIButton {
             receiptID: downloadID,
             filter: nil,
             progress: progress,
-            progressQueue: progressQueue,
+            handlerQueue: handlerQueue,
             completion: { [weak self] response in
                 guard
                     let strongSelf = self,

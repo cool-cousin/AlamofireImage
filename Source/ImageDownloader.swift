@@ -262,9 +262,10 @@ open class ImageDownloader {
     open func download(
         _ urlRequest: URLRequestConvertible,
         receiptID: String = UUID().uuidString,
+        downloadPrioritization: DownloadPrioritization? = nil,
         filter: ImageFilter? = nil,
         progress: ProgressHandler? = nil,
-        progressQueue: DispatchQueue = DispatchQueue.main,
+        handlerQueue: DispatchQueue = DispatchQueue.main,
         completion: CompletionHandler?)
         -> RequestReceipt?
     {
@@ -285,7 +286,7 @@ open class ImageDownloader {
                 switch request.cachePolicy {
                 case .useProtocolCachePolicy, .returnCacheDataElseLoad, .returnCacheDataDontLoad:
                     if let image = self.imageCache?.image(for: request, withIdentifier: filter?.identifier) {
-                        DispatchQueue.main.async {
+                        handlerQueue.async {
                             let response = DataResponse<Image>(
                                 request: urlRequest.urlRequest,
                                 response: nil,
@@ -313,7 +314,7 @@ open class ImageDownloader {
             request.validate()
 
             if let progress = progress {
-                request.downloadProgress(queue: progressQueue, closure: progress)
+                request.downloadProgress(queue: handlerQueue, closure: progress)
             }
 
             // Generate a unique handler id to check whether the active request has changed while downloading
@@ -358,7 +359,7 @@ open class ImageDownloader {
 
                             strongSelf.imageCache?.add(filteredImage, for: request, withIdentifier: filter?.identifier)
 
-                            DispatchQueue.main.async {
+                            handlerQueue.async {
                                 let response = DataResponse<Image>(
                                     request: response.request,
                                     response: response.response,
@@ -372,7 +373,7 @@ open class ImageDownloader {
                         }
                     case .failure:
                         for (_, _, completion) in responseHandler.operations {
-                            DispatchQueue.main.async { completion?(response) }
+                            handlerQueue.async { completion?(response) }
                         }
                     }
                 }
@@ -393,7 +394,7 @@ open class ImageDownloader {
             if self.isActiveRequestCountBelowMaximumLimit() {
                 self.start(request)
             } else {
-                self.enqueue(request)
+                self.enqueue(request, priority: downloadPrioritization)
             }
         }
 
@@ -430,14 +431,15 @@ open class ImageDownloader {
     @discardableResult
     open func download(
         _ urlRequests: [URLRequestConvertible],
+        downloadPrioritization: DownloadPrioritization? = nil,
         filter: ImageFilter? = nil,
         progress: ProgressHandler? = nil,
-        progressQueue: DispatchQueue = DispatchQueue.main,
+        handlerQueue: DispatchQueue = DispatchQueue.main,
         completion: CompletionHandler? = nil)
         -> [RequestReceipt]
     {
         return urlRequests.flatMap {
-            download($0, filter: filter, progress: progress, progressQueue: progressQueue, completion: completion)
+            download($0, downloadPrioritization: downloadPrioritization, filter: filter, progress: progress, handlerQueue: handlerQueue, completion: completion)
         }
     }
 
@@ -523,8 +525,9 @@ open class ImageDownloader {
         activeRequestCount += 1
     }
 
-    func enqueue(_ request: Request) {
-        switch downloadPrioritization {
+    func enqueue(_ request: Request, priority: DownloadPrioritization? = nil) {
+        let _priority = priority ?? downloadPrioritization
+        switch _priority {
         case .fifo:
             queuedRequests.append(request)
         case .lifo:
@@ -541,6 +544,21 @@ open class ImageDownloader {
         }
 
         return request
+    }
+    
+    public func changePriority(for receipt: RequestReceipt, priority: DownloadPrioritization) {
+        self.synchronizationQueue.sync {
+            for (i,req) in self.queuedRequests.enumerated(){
+                if req.task == receipt.request.task {
+                    self.queuedRequests.remove(at: i)
+                    switch priority {
+                    case .fifo: self.queuedRequests.append(req)
+                    case .lifo: self.queuedRequests.insert(req, at: 0)
+                    }
+                    break
+                }
+            }
+        }
     }
 
     func isActiveRequestCountBelowMaximumLimit() -> Bool {

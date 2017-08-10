@@ -205,7 +205,7 @@ extension UIImageView {
         placeholderImage: UIImage? = nil,
         filter: ImageFilter? = nil,
         progress: ImageDownloader.ProgressHandler? = nil,
-        progressQueue: DispatchQueue = DispatchQueue.main,
+        handlerQueue: DispatchQueue = DispatchQueue.main,
         imageTransition: ImageTransition = .noTransition,
         runImageTransitionIfCached: Bool = false,
         completion: ((DataResponse<UIImage>) -> Void)? = nil)
@@ -215,7 +215,7 @@ extension UIImageView {
             placeholderImage: placeholderImage,
             filter: filter,
             progress: progress,
-            progressQueue: progressQueue,
+            handlerQueue: handlerQueue,
             imageTransition: imageTransition,
             runImageTransitionIfCached: runImageTransitionIfCached,
             completion: completion
@@ -258,7 +258,7 @@ extension UIImageView {
         placeholderImage: UIImage? = nil,
         filter: ImageFilter? = nil,
         progress: ImageDownloader.ProgressHandler? = nil,
-        progressQueue: DispatchQueue = DispatchQueue.main,
+        handlerQueue: DispatchQueue = DispatchQueue.main,
         imageTransition: ImageTransition = .noTransition,
         runImageTransitionIfCached: Bool = false,
         completion: ((DataResponse<UIImage>) -> Void)? = nil)
@@ -312,7 +312,7 @@ extension UIImageView {
             receiptID: downloadID,
             filter: filter,
             progress: progress,
-            progressQueue: progressQueue,
+            handlerQueue: handlerQueue,
             completion: { [weak self] response in
                 guard
                     let strongSelf = self,
